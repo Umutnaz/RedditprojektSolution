@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Model;
+using shared;
+using shared.Model;
 
 namespace Data
 {
@@ -13,6 +14,7 @@ namespace Data
         //Samme herunder
         public DbSet<Comment> Comments => Set<Comment>();
 
+        public DbSet<User> Users => Set<User>();
 
         public PostContext (DbContextOptions<PostContext> options)
             : base(options)

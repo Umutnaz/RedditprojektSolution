@@ -1,174 +1,216 @@
 using Microsoft.EntityFrameworkCore;
 using Data;
-using Model;
+using shared.Model;
 
-namespace Service;
-
-public class DataService
+namespace shared.Model
 {
-    private PostContext db { get; }
+    public class DataService
+    {
+        private PostContext db { get; }
 
-    public DataService(PostContext db) {
-        this.db = db;
-    }
-    public void SeedData() {
-        if (!db.Posts.Any())
+        public DataService(PostContext db)
         {
-            var now = DateTime.Now;
-
-            var post1 = new Post
-            {
-                postid = 1,
-                author = "Kristian",
-                title = "Min første post",
-                content = "Hej alle sammen, dette er min første post!",
-                upvotes = 5,
-                downvotes = 0,
-                comments = new List<Comment>
-                {
-                    new Comment
-                    {
-                        commentid = 1,
-                        author = "Søren",
-                        content = "Velkommen til forumet!",
-                        upvotes = 2,
-                        downvotes = 0
-                    },
-                    new Comment
-                    {
-                        commentid = 2,
-                        author = "Mette",
-                        content = "God post – glæder mig til at læse mere.",
-                        upvotes = 3,
-                        downvotes = 1
-                    }
-                }
-            };
-
-            var post2 = new Post
-            {
-                postid = 2,
-                author = "Søren",
-                title = "En anden post",
-                content = "Dette er endnu en post, bare for at teste seed data.",
-                upvotes = 1,
-                downvotes = 0,
-                comments = new List<Comment>
-                {
-                    new Comment
-                    {
-                        commentid = 3,
-                        author = "Kristian",
-                        content = "Interessant, fortæl mere!",
-                    }
-                }
-            };
-
-            db.Posts.Add(post1);
-            db.Posts.Add(post2);
-            db.SaveChanges();
+            this.db = db;
         }
-    }
 
-
-//Get
-    public List<Post> GetPosts()
-    {
-        return db.Posts.Include(p => p.comments).ToList();
-    }
-
-    public Post? GetPost(int id)
-    {
-        return db.Posts.Include(p => p.comments).FirstOrDefault(p => p.postid == id);
-    }
-
-    //Post
-
-    public string CreatePost(string author, string title, string content)
-    {
-        int nextId = db.Posts.Select(p => p.postid).DefaultIfEmpty(0).Max() + 1;
-
-        var post = new Post
+        public void SeedData()
         {
-            postid = nextId,
-            author = string.IsNullOrWhiteSpace(author) ? "Anonymous" : author,
-            title = title ?? "",
-            content = content ?? "",
-            comments = new List<Comment>()
-        };
+            if (!db.Posts.Any())
+            {
+                // Opret brugere
+                var kristian = new User { Id = 1, Username = "Kristian" };
+                var søren    = new User { Id = 2, Username = "Søren" };
+                var mette    = new User { Id = 3, Username = "Mette" };
+                var line     = new User { Id = 4, Username = "Line" };
 
-        db.Posts.Add(post);
-        db.SaveChanges();
-        return "Post created";
-    }
+                // Første post
+                var post1 = new Post
+                {
+                    Id = 1,
+                    User = kristian,
+                    Title = "Min første post",
+                    Content = "Hej alle sammen, dette er min første post!",
+                    Upvotes = 5,
+                    Downvotes = 0,
+                    Comments = new List<Comment>
+                    {
+                        new Comment
+                        {
+                            Id = 1,
+                            User = søren,
+                            Content = "Velkommen til forumet!",
+                            Upvotes = 2,
+                            Downvotes = 0
+                        },
+                        new Comment
+                        {
+                            Id = 2,
+                            User = mette,
+                            Content = "God post – glæder mig til at læse mere.",
+                            Upvotes = 3,
+                            Downvotes = 1
+                        }
+                    }
+                };
 
-    public string AddCommentToPost(int postId, string author, string content)
-    {
-        var post = db.Posts.Include(p => p.comments).FirstOrDefault(p => p.postid == postId);
-        if (post == null) return "Post not found";
+                // Anden post
+                var post2 = new Post
+                {
+                    Id = 2,
+                    User = søren,
+                    Title = "En anden post",
+                    Content = "Dette er endnu en post, bare for at teste seed data.",
+                    Upvotes = 1,
+                    Downvotes = 0,
+                    Comments = new List<Comment>
+                    {
+                        new Comment
+                        {
+                            Id = 3,
+                            User = kristian,
+                            Content = "Interessant, fortæl mere!",
+                            Upvotes = 1,
+                            Downvotes = 0
+                        },
+                        new Comment
+                        {
+                            Id = 4,
+                            User = line,
+                            Content = "Enig, det lyder spændende!",
+                            Upvotes = 0,
+                            Downvotes = 0
+                        }
+                    }
+                };
 
-        post.comments ??= new List<Comment>();
-        int nextCid = post.comments.Select(c => c.commentid).DefaultIfEmpty(0).Max() + 1;
+                // Tilføj brugere og posts til databasen
+                db.Users.AddRange(kristian, søren, mette, line);
+                db.Posts.AddRange(post1, post2);
 
-        var newComment = new Comment
+                db.SaveChanges();
+            }
+        }
+
+        // -----------------------
+        // Get
+        // -----------------------
+        public List<Post> GetPosts()
         {
-            commentid = nextCid,
-            author = string.IsNullOrWhiteSpace(author) ? "Anonymous" : author,
-            content = content ?? "",
-        };
+            return db.Posts
+                .Include(p => p.User)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
+                .ToList();
+        }
 
-        post.comments.Add(newComment);
-        db.SaveChanges();
-        return "Comment added";
-    }
+        public Post? GetPost(int id)
+        {
+            return db.Posts
+                .Include(p => p.User)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
+                .FirstOrDefault(p => p.Id == id);
+        }
 
-    // Votes
+        // -----------------------
+        // Post
+        // -----------------------
+        public string CreatePost(User user, string title, string content)
+        {
+            int nextId = db.Posts.Select(p => p.Id).DefaultIfEmpty(0).Max() + 1;
+            user.Username = string.IsNullOrWhiteSpace(user.Username) ? "Anonymous" : user.Username;
 
-    public bool UpvotePost(int id)
-    {
-        var post = db.Posts.FirstOrDefault(p => p.postid == id);
-        if (post == null) return false;
+            var post = new Post
+            {
+                Id = nextId,
+                User = user,
+                Title = title ?? "",
+                Content = content ?? "",
+                Comments = new List<Comment>()
+            };
 
-        post.upvotes += 1;
-        db.SaveChanges();
-        return true;
-    }
+            db.Posts.Add(post);
+            db.SaveChanges();
+            return "Post created";
+        }
 
-    public bool DownvotePost(int id)
-    {
-        var post = db.Posts.FirstOrDefault(p => p.postid == id);
-        if (post == null) return false;
+        public string AddCommentToPost(int postId, User user, string content)
+        {
+            var post = db.Posts
+                .Include(p => p.Comments)
+                .FirstOrDefault(p => p.Id == postId);
 
-        post.downvotes += 1;
-        db.SaveChanges();
-        return true;
-    }
+            if (post == null) return "Post not found";
 
-    // Votes
+            post.Comments ??= new List<Comment>();
+            int nextCid = post.Comments.Select(c => c.Id).DefaultIfEmpty(0).Max() + 1;
 
-    public bool UpvoteComment(int postId, int commentId)
-    {
-        var post = db.Posts.Include(p => p.comments).FirstOrDefault(p => p.postid == postId);
-        if (post == null) return false;
+            user.Username = string.IsNullOrWhiteSpace(user.Username) ? "Anonymous" : user.Username;
 
-        var comment = post.comments?.FirstOrDefault(c => c.commentid == commentId);
-        if (comment == null) return false;
+            var newComment = new Comment
+            {
+                Id = nextCid,
+                User = user,
+                Content = content ?? "",
+                Upvotes = 0,
+                Downvotes = 0
+            };
 
-        comment.upvotes += 1;
-        db.SaveChanges();
-        return true;
-    }
+            post.Comments.Add(newComment);
+            db.SaveChanges();
+            return "Comment added";
+        }
 
-    public bool DownvoteComment(int postId, int commentId)
-    {
-        var post = db.Posts.Include(p => p.comments).FirstOrDefault(p => p.postid == postId);
-        if (post == null) return false;
+        // -----------------------
+        // Votes (posts)
+        // -----------------------
+        public bool UpvotePost(int id)
+        {
+            var post = db.Posts.FirstOrDefault(p => p.Id == id);
+            if (post == null) return false;
 
-        var comment = post.comments?.FirstOrDefault(c => c.commentid == commentId);
-        if (comment == null) return false;
+            post.Upvotes += 1;
+            db.SaveChanges();
+            return true;
+        }
 
-        comment.downvotes += 1;
-        db.SaveChanges();
-        return true;
+        public bool DownvotePost(int id)
+        {
+            var post = db.Posts.FirstOrDefault(p => p.Id == id);
+            if (post == null) return false;
+
+            post.Downvotes += 1;
+            db.SaveChanges();
+            return true;
+        }
+
+        // -----------------------
+        // Votes (comments)
+        // -----------------------
+        public bool UpvoteComment(int postId, int commentId)
+        {
+            var post = db.Posts.Include(p => p.Comments).FirstOrDefault(p => p.Id == postId);
+            if (post == null) return false;
+
+            var comment = post.Comments?.FirstOrDefault(c => c.Id == commentId);
+            if (comment == null) return false;
+
+            comment.Upvotes += 1;
+            db.SaveChanges();
+            return true;
+        }
+
+        public bool DownvoteComment(int postId, int commentId)
+        {
+            var post = db.Posts.Include(p => p.Comments).FirstOrDefault(p => p.Id == postId);
+            if (post == null) return false;
+
+            var comment = post.Comments?.FirstOrDefault(c => c.Id == commentId);
+            if (comment == null) return false;
+
+            comment.Downvotes += 1;
+            db.SaveChanges();
+            return true;
+        }
     }
 }

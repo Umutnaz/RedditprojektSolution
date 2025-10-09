@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Json;
 
 using Data;
-using Model;
-using Service;
+
+using shared.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +58,7 @@ app.MapGet("/api/posts/{id:int}", (DataService service, int id) =>
 
 app.MapPost("/api/posts", (DataService service, NewPostData data) =>
 {
-    var message = service.CreatePost(data.author, data.title, data.content);
+    var message = service.CreatePost(data.user, data.title, data.content);
     return new { message };
 });
 
@@ -78,7 +78,7 @@ app.MapPut("/api/posts/{id:int}/downvote", (DataService service, int id) =>
 
 app.MapPost("/api/posts/{id:int}/comments", (DataService service, int id, NewCommentData data) =>
 {
-    var message = service.AddCommentToPost(id, data.author, data.content);
+    var message = service.AddCommentToPost(id, data.user, data.content);
     return message == "Comment added" ? Results.Ok(new { message }) : Results.NotFound(new { message });
 });
 
@@ -96,5 +96,5 @@ app.MapPut("/api/posts/{postid:int}/comments/{commentid:int}/downvote", (DataSer
 
 app.Run();
 
-record NewPostData(string author, string title, string content);
-record NewCommentData(string author, string content);
+record NewPostData(User user, string title, string content);
+record NewCommentData(User user, string content);

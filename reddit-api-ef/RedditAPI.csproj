@@ -18,5 +18,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\kreddit-app\kreddit-app.csproj" />
+    <ProjectReference Include="..\shared\shared.csproj" />
+  </ItemGroup>
+
 </Project>
 
