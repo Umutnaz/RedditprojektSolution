@@ -17,17 +17,10 @@ namespace shared.Model
         {
             if (!db.Posts.Any())
             {
-                // Opret brugere
-                var kristian = new User { Id = 1, Username = "Kristian" };
-                var søren    = new User { Id = 2, Username = "Søren" };
-                var mette    = new User { Id = 3, Username = "Mette" };
-                var line     = new User { Id = 4, Username = "Line" };
-
                 // Første post
                 var post1 = new Post
                 {
                     Id = 1,
-                    User = kristian,
                     Title = "Min første post",
                     Content = "Hej alle sammen, dette er min første post!",
                     Upvotes = 5,
@@ -37,7 +30,6 @@ namespace shared.Model
                         new Comment
                         {
                             Id = 1,
-                            User = søren,
                             Content = "Velkommen til forumet!",
                             Upvotes = 2,
                             Downvotes = 0
@@ -45,7 +37,6 @@ namespace shared.Model
                         new Comment
                         {
                             Id = 2,
-                            User = mette,
                             Content = "God post – glæder mig til at læse mere.",
                             Upvotes = 3,
                             Downvotes = 1
@@ -57,7 +48,6 @@ namespace shared.Model
                 var post2 = new Post
                 {
                     Id = 2,
-                    User = søren,
                     Title = "En anden post",
                     Content = "Dette er endnu en post, bare for at teste seed data.",
                     Upvotes = 1,
@@ -67,7 +57,6 @@ namespace shared.Model
                         new Comment
                         {
                             Id = 3,
-                            User = kristian,
                             Content = "Interessant, fortæl mere!",
                             Upvotes = 1,
                             Downvotes = 0
@@ -75,7 +64,6 @@ namespace shared.Model
                         new Comment
                         {
                             Id = 4,
-                            User = line,
                             Content = "Enig, det lyder spændende!",
                             Upvotes = 0,
                             Downvotes = 0
@@ -84,7 +72,6 @@ namespace shared.Model
                 };
 
                 // Tilføj brugere og posts til databasen
-                db.Users.AddRange(kristian, søren, mette, line);
                 db.Posts.AddRange(post1, post2);
 
                 db.SaveChanges();
@@ -97,33 +84,27 @@ namespace shared.Model
         public List<Post> GetPosts()
         {
             return db.Posts
-                .Include(p => p.User)
                 .Include(p => p.Comments)
-                    .ThenInclude(c => c.User)
                 .ToList();
         }
 
         public Post? GetPost(int id)
         {
             return db.Posts
-                .Include(p => p.User)
                 .Include(p => p.Comments)
-                    .ThenInclude(c => c.User)
                 .FirstOrDefault(p => p.Id == id);
         }
 
         // -----------------------
         // Post
         // -----------------------
-        public string CreatePost(User user, string title, string content)
+        public string CreatePost( string title, string content)
         {
             int nextId = db.Posts.Select(p => p.Id).DefaultIfEmpty(0).Max() + 1;
-            user.Username = string.IsNullOrWhiteSpace(user.Username) ? "Anonymous" : user.Username;
 
             var post = new Post
             {
                 Id = nextId,
-                User = user,
                 Title = title ?? "",
                 Content = content ?? "",
                 Comments = new List<Comment>()
@@ -133,9 +114,9 @@ namespace shared.Model
             db.SaveChanges();
             return "Post created";
         }
-
-        public string AddCommentToPost(int postId, User user, string content)
+        public string AddCommentToPost(int postId, string content)
         {
+
             var post = db.Posts
                 .Include(p => p.Comments)
                 .FirstOrDefault(p => p.Id == postId);
@@ -145,12 +126,9 @@ namespace shared.Model
             post.Comments ??= new List<Comment>();
             int nextCid = post.Comments.Select(c => c.Id).DefaultIfEmpty(0).Max() + 1;
 
-            user.Username = string.IsNullOrWhiteSpace(user.Username) ? "Anonymous" : user.Username;
-
             var newComment = new Comment
             {
                 Id = nextCid,
-                User = user,
                 Content = content ?? "",
                 Upvotes = 0,
                 Downvotes = 0
@@ -160,6 +138,7 @@ namespace shared.Model
             db.SaveChanges();
             return "Comment added";
         }
+
 
         // -----------------------
         // Votes (posts)

@@ -13,8 +13,7 @@ namespace Data
         public DbSet<Post> Posts => Set<Post>();
         //Samme herunder
         public DbSet<Comment> Comments => Set<Comment>();
-
-        public DbSet<User> Users => Set<User>();
+        
 
         public PostContext (DbContextOptions<PostContext> options)
             : base(options)
