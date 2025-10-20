@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Components
+@using kreddit_app.Data
+
+@inject ApiService apiService
+
+<div style="margin-bottom:1rem">
+    <h3>Create a post</h3>
+    <input placeholder="Username (optional)" @bind="pUserName" />
+    <input placeholder="Title" @bind="title" />
+    <input placeholder="Content" @bind="content" />
+    <button @onclick="CreateNewPost">Create post</button>
+    <p>"Anonymous" will appear if you dont type anything</p>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnPostAdded { get; set; }
+
+    private string? pUserName;
+    private string? title;
+    private string? content;
+
+    private async Task CreateNewPost()
+    {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content)) return;
+
+        // send pUserName med - backend sætter "Anonymous" hvis tom
+        await apiService.CreatePost(title!, content!, pUserName);
+
+        // ryd felter (valgfrit)
+        pUserName = "";
+        title = "";
+        content = "";
+
+        await OnPostAdded.InvokeAsync();
+    }
+}

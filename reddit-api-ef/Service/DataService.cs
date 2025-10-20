@@ -102,15 +102,18 @@ public void SeedData()
         // -----------------------
         // Post
         // -----------------------
-        public string CreatePost( string title, string content)
+        public string CreatePost(string title, string content, string? pUserName = null)
         {
-            int nextId = db.Posts.Select(p => p.Id).DefaultIfEmpty(0).Max() + 1;
+            if (string.IsNullOrWhiteSpace(pUserName))
+                pUserName = "Anonymous";
 
             var post = new Post
             {
-                Id = nextId,
                 Title = title ?? "",
                 Content = content ?? "",
+                PUserName = pUserName,
+                Upvotes = 0,
+                Downvotes = 0,
                 Comments = new List<Comment>()
             };
 
@@ -118,6 +121,7 @@ public void SeedData()
             db.SaveChanges();
             return "Post created";
         }
+
         public string AddCommentToPost(int postId, string content, string? cUserName = null)
         {
             var post = db.Posts

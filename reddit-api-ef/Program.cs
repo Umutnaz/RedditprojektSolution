@@ -58,9 +58,10 @@ app.MapGet("/api/posts/{id:int}", (DataService service, int id) =>
 
 app.MapPost("/api/posts", (DataService service, NewPostData data) =>
 {
-    var message = service.CreatePost(data.title, data.content);
+    var message = service.CreatePost(data.title, data.content, data.pUserName);
     return new { message };
 });
+
 
 app.MapPut("/api/posts/{id:int}/upvote", (DataService service, int id) =>
 {
@@ -95,6 +96,7 @@ app.MapPut("/api/posts/{postid:int}/comments/{commentid:int}/downvote", (DataSer
 
 app.Run();
 
-record NewPostData(string title, string content);
+record NewPostData(string title, string content, string? pUserName);
+
 record NewCommentData(string content, string? cUserName);
 
