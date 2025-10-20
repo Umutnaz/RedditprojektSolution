@@ -13,70 +13,74 @@ namespace shared.Model
             this.db = db;
         }
 
-        public void SeedData()
+public void SeedData()
+{
+    if (!db.Posts.Any())
+    {
+        var post1 = new Post
         {
-            if (!db.Posts.Any())
+            Id = 1,
+            Title = "Min første post",
+            Content = "Hej alle sammen, dette er min første post!",
+            Upvotes = 5,
+            Downvotes = 0,
+            PUserName = "Klaus",
+            Comments = new List<Comment>
             {
-                // Første post
-                var post1 = new Post
+                new Comment
                 {
                     Id = 1,
-                    Title = "Min første post",
-                    Content = "Hej alle sammen, dette er min første post!",
-                    Upvotes = 5,
+                    Content = "Velkommen til forumet!",
+                    Upvotes = 2,
                     Downvotes = 0,
-                    Comments = new List<Comment>
-                    {
-                        new Comment
-                        {
-                            Id = 1,
-                            Content = "Velkommen til forumet!",
-                            Upvotes = 2,
-                            Downvotes = 0
-                        },
-                        new Comment
-                        {
-                            Id = 2,
-                            Content = "God post – glæder mig til at læse mere.",
-                            Upvotes = 3,
-                            Downvotes = 1
-                        }
-                    }
-                };
-
-                // Anden post
-                var post2 = new Post
+                    CUserName = "Lars"
+                },
+                new Comment
                 {
                     Id = 2,
-                    Title = "En anden post",
-                    Content = "Dette er endnu en post, bare for at teste seed data.",
+                    Content = "God post – glæder mig til at læse mere.",
+                    Upvotes = 3,
+                    Downvotes = 1,
+                    CUserName = "Sofie"
+                }
+            }
+        };
+
+        // Anden post (navn sat eksplicit)
+        var post2 = new Post
+        {
+            Id = 2,
+            Title = "En anden post",
+            Content = "Dette er endnu en post, bare for at teste seed data.",
+            Upvotes = 1,
+            Downvotes = 0,
+            PUserName = "Anders",
+            Comments = new List<Comment>
+            {
+                new Comment
+                {
+                    Id = 3,
+                    Content = "Interessant, fortæl mere!",
                     Upvotes = 1,
                     Downvotes = 0,
-                    Comments = new List<Comment>
-                    {
-                        new Comment
-                        {
-                            Id = 3,
-                            Content = "Interessant, fortæl mere!",
-                            Upvotes = 1,
-                            Downvotes = 0
-                        },
-                        new Comment
-                        {
-                            Id = 4,
-                            Content = "Enig, det lyder spændende!",
-                            Upvotes = 0,
-                            Downvotes = 0
-                        }
-                    }
-                };
-
-                // Tilføj brugere og posts til databasen
-                db.Posts.AddRange(post1, post2);
-
-                db.SaveChanges();
+                    CUserName = "Maja"
+                },
+                new Comment
+                {
+                    Id = 4,
+                    Content = "Enig, det lyder spændende!",
+                    Upvotes = 0,
+                    Downvotes = 0,
+                    CUserName = "StoneMountain64" 
+                }
             }
-        }
+        };
+
+        db.Posts.AddRange(post1, post2);
+        db.SaveChanges();
+    }
+}
+
 
         // -----------------------
         // Get
@@ -114,30 +118,35 @@ namespace shared.Model
             db.SaveChanges();
             return "Post created";
         }
-        public string AddCommentToPost(int postId, string content)
+        public string AddCommentToPost(int postId, string content, string? cUserName = null)
         {
-
             var post = db.Posts
                 .Include(p => p.Comments)
                 .FirstOrDefault(p => p.Id == postId);
 
             if (post == null) return "Post not found";
 
-            post.Comments ??= new List<Comment>();
-            int nextCid = post.Comments.Select(c => c.Id).DefaultIfEmpty(0).Max() + 1;
+            // Sæt navn til "Anonymous" hvis tomt
+            if (string.IsNullOrWhiteSpace(cUserName))
+                cUserName = "Anonymous";
 
             var newComment = new Comment
             {
-                Id = nextCid,
+                // Lad DB generere Id (vigtigt!)
                 Content = content ?? "",
                 Upvotes = 0,
-                Downvotes = 0
+                Downvotes = 0,
+                CUserName = cUserName
             };
 
+            post.Comments ??= new List<Comment>();
             post.Comments.Add(newComment);
+
             db.SaveChanges();
             return "Comment added";
         }
+
+
 
 
         // -----------------------

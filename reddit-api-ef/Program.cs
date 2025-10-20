@@ -78,10 +78,9 @@ app.MapPut("/api/posts/{id:int}/downvote", (DataService service, int id) =>
 
 app.MapPost("/api/posts/{id:int}/comments", (DataService service, int id, NewCommentData data) =>
 {
-    var message = service.AddCommentToPost(id, data.content);
+    var message = service.AddCommentToPost(id, data.content, data.cUserName);
     return message == "Comment added" ? Results.Ok(new { message }) : Results.NotFound(new { message });
 });
-
 app.MapPut("/api/posts/{postid:int}/comments/{commentid:int}/upvote", (DataService service, int postid, int commentid) =>
 {
     var ok = service.UpvoteComment(postid, commentid);
@@ -97,4 +96,5 @@ app.MapPut("/api/posts/{postid:int}/comments/{commentid:int}/downvote", (DataSer
 app.Run();
 
 record NewPostData(string title, string content);
-record NewCommentData(string content);
+record NewCommentData(string content, string? cUserName);
+
