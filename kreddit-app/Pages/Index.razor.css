@@ -1,0 +1,36 @@
+﻿.hero {
+    background: radial-gradient(1000px 500px at 10% -10%, #eef2ff, transparent 60%),
+    radial-gradient(1000px 500px at 90% -10%, #ecfeff, transparent 60%),
+    linear-gradient(180deg, #ffffff, #f9fafb 60%, #ffffff);
+    border-bottom: 1px solid #eef2f7;
+}
+
+.hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 16px 28px 16px;
+    text-align: center;
+}
+
+.hero-title {
+    margin: 0;
+    font-size: clamp(1.8rem, 2.5vw + 1rem, 2.6rem);
+    letter-spacing: -0.02em;
+    color: #111827;
+}
+
+.brand { color: #4f46e5; }
+
+.hero-subtitle {
+    margin: 8px auto 0;
+    color: #4b5563;
+    max-width: 720px;
+    line-height: 1.6;
+}
+
+.home-list {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
