@@ -23,8 +23,7 @@ namespace shared.Model
                     Id = 1,
                     Title = "Min første post",
                     Content = "Hej alle sammen, dette er min første post!",
-                    Upvotes = 5,
-                    Downvotes = 0,
+                    Votes = 4,
                     PUserName = "Klaus",
                     PCreatedAt = DateTime.UtcNow,
                     Comments = new List<Comment>
@@ -33,8 +32,7 @@ namespace shared.Model
                         {
                             Id = 1,
                             Content = "Velkommen til forumet!",
-                            Upvotes = 2,
-                            Downvotes = 0,
+                            Votes = 3,
                             CUserName = "Lars",
                             CCreatedAt = DateTime.UtcNow
                         },
@@ -42,8 +40,7 @@ namespace shared.Model
                         {
                             Id = 2,
                             Content = "God post – glæder mig til at læse mere.",
-                            Upvotes = 3,
-                            Downvotes = 1,
+                          Votes = 5,
                             CUserName = "Sofie",
                             CCreatedAt = DateTime.UtcNow
                         }
@@ -56,8 +53,7 @@ namespace shared.Model
                     Id = 2,
                     Title = "En anden post",
                     Content = "Dette er endnu en post, bare for at teste seed data.",
-                    Upvotes = 1,
-                    Downvotes = 0,
+                  Votes = 0,
                     PUserName = "Anders",
                     PCreatedAt = DateTime.UtcNow,
                     Comments = new List<Comment>
@@ -66,8 +62,7 @@ namespace shared.Model
                         {
                             Id = 3,
                             Content = "Interessant, fortæl mere!",
-                            Upvotes = 1,
-                            Downvotes = 0,
+                           Votes = 100,
                             CUserName = "Maja",
                             CCreatedAt = DateTime.UtcNow
                         },
@@ -75,8 +70,7 @@ namespace shared.Model
                         {
                             Id = 4,
                             Content = "Enig, det lyder spændende!",
-                            Upvotes = 0,
-                            Downvotes = 0,
+                            Votes = 42,
                             CUserName = "StoneMountain64",
                             CCreatedAt = DateTime.UtcNow
                         }
@@ -118,8 +112,7 @@ namespace shared.Model
                 Title = title ?? "",
                 Content = content ?? "",
                 PUserName = pUserName,
-                Upvotes = 0,
-                Downvotes = 0,
+              Votes = 0,
                 PCreatedAt = DateTime.UtcNow,
                 Comments = new List<Comment>()
             };
@@ -145,8 +138,7 @@ namespace shared.Model
             {
                 // Lad DB generere Id (vigtigt!)
                 Content = content ?? "",
-                Upvotes = 0,
-                Downvotes = 0,
+              Votes = 0,
                 CUserName = cUserName,
                 CCreatedAt = DateTime.UtcNow
             };
@@ -166,7 +158,7 @@ namespace shared.Model
             var post = db.Posts.FirstOrDefault(p => p.Id == id);
             if (post == null) return false;
 
-            post.Upvotes += 1;
+            post.Votes += 1;
             db.SaveChanges();
             return true;
         }
@@ -176,7 +168,7 @@ namespace shared.Model
             var post = db.Posts.FirstOrDefault(p => p.Id == id);
             if (post == null) return false;
 
-            post.Downvotes += 1;
+            post.Votes -= 1;
             db.SaveChanges();
             return true;
         }
@@ -192,7 +184,7 @@ namespace shared.Model
             var comment = post.Comments?.FirstOrDefault(c => c.Id == commentId);
             if (comment == null) return false;
 
-            comment.Upvotes += 1;
+            comment.Votes += 1;
             db.SaveChanges();
             return true;
         }
@@ -205,7 +197,7 @@ namespace shared.Model
             var comment = post.Comments?.FirstOrDefault(c => c.Id == commentId);
             if (comment == null) return false;
 
-            comment.Downvotes += 1;
+            comment.Votes -= 1;
             db.SaveChanges();
             return true;
         }
