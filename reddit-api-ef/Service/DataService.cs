@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Data;
 using shared.Model;
@@ -13,74 +14,79 @@ namespace shared.Model
             this.db = db;
         }
 
-public void SeedData()
-{
-    if (!db.Posts.Any())
-    {
-        var post1 = new Post
+        public void SeedData()
         {
-            Id = 1,
-            Title = "Min første post",
-            Content = "Hej alle sammen, dette er min første post!",
-            Upvotes = 5,
-            Downvotes = 0,
-            PUserName = "Klaus",
-            Comments = new List<Comment>
+            if (!db.Posts.Any())
             {
-                new Comment
+                var post1 = new Post
                 {
                     Id = 1,
-                    Content = "Velkommen til forumet!",
-                    Upvotes = 2,
+                    Title = "Min første post",
+                    Content = "Hej alle sammen, dette er min første post!",
+                    Upvotes = 5,
                     Downvotes = 0,
-                    CUserName = "Lars"
-                },
-                new Comment
+                    PUserName = "Klaus",
+                    PCreatedAt = DateTime.UtcNow,
+                    Comments = new List<Comment>
+                    {
+                        new Comment
+                        {
+                            Id = 1,
+                            Content = "Velkommen til forumet!",
+                            Upvotes = 2,
+                            Downvotes = 0,
+                            CUserName = "Lars",
+                            CCreatedAt = DateTime.UtcNow
+                        },
+                        new Comment
+                        {
+                            Id = 2,
+                            Content = "God post – glæder mig til at læse mere.",
+                            Upvotes = 3,
+                            Downvotes = 1,
+                            CUserName = "Sofie",
+                            CCreatedAt = DateTime.UtcNow
+                        }
+                    }
+                };
+
+                // Anden post (navn sat eksplicit)
+                var post2 = new Post
                 {
                     Id = 2,
-                    Content = "God post – glæder mig til at læse mere.",
-                    Upvotes = 3,
-                    Downvotes = 1,
-                    CUserName = "Sofie"
-                }
-            }
-        };
-
-        // Anden post (navn sat eksplicit)
-        var post2 = new Post
-        {
-            Id = 2,
-            Title = "En anden post",
-            Content = "Dette er endnu en post, bare for at teste seed data.",
-            Upvotes = 1,
-            Downvotes = 0,
-            PUserName = "Anders",
-            Comments = new List<Comment>
-            {
-                new Comment
-                {
-                    Id = 3,
-                    Content = "Interessant, fortæl mere!",
+                    Title = "En anden post",
+                    Content = "Dette er endnu en post, bare for at teste seed data.",
                     Upvotes = 1,
                     Downvotes = 0,
-                    CUserName = "Maja"
-                },
-                new Comment
-                {
-                    Id = 4,
-                    Content = "Enig, det lyder spændende!",
-                    Upvotes = 0,
-                    Downvotes = 0,
-                    CUserName = "StoneMountain64" 
-                }
+                    PUserName = "Anders",
+                    PCreatedAt = DateTime.UtcNow,
+                    Comments = new List<Comment>
+                    {
+                        new Comment
+                        {
+                            Id = 3,
+                            Content = "Interessant, fortæl mere!",
+                            Upvotes = 1,
+                            Downvotes = 0,
+                            CUserName = "Maja",
+                            CCreatedAt = DateTime.UtcNow
+                        },
+                        new Comment
+                        {
+                            Id = 4,
+                            Content = "Enig, det lyder spændende!",
+                            Upvotes = 0,
+                            Downvotes = 0,
+                            CUserName = "StoneMountain64",
+                            CCreatedAt = DateTime.UtcNow
+                        }
+                    }
+                };
+
+                db.Posts.AddRange(post1, post2);
+                db.SaveChanges();
             }
-        };
-
-        db.Posts.AddRange(post1, post2);
-        db.SaveChanges();
-    }
-}
-
+        }
 
         // -----------------------
         // Get
@@ -114,6 +120,7 @@ public void SeedData()
                 PUserName = pUserName,
                 Upvotes = 0,
                 Downvotes = 0,
+                PCreatedAt = DateTime.UtcNow,
                 Comments = new List<Comment>()
             };
 
@@ -140,7 +147,8 @@ public void SeedData()
                 Content = content ?? "",
                 Upvotes = 0,
                 Downvotes = 0,
-                CUserName = cUserName
+                CUserName = cUserName,
+                CCreatedAt = DateTime.UtcNow
             };
 
             post.Comments ??= new List<Comment>();
@@ -149,9 +157,6 @@ public void SeedData()
             db.SaveChanges();
             return "Comment added";
         }
-
-
-
 
         // -----------------------
         // Votes (posts)
