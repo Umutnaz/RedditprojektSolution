@@ -1,0 +1,149 @@
+﻿@page "/post/{id}"
+
+@using kreddit_app.Data
+@using shared.Model
+@inject ApiService apiService
+
+<PageTitle>Kreddit</PageTitle>
+
+@if (Post == null)
+{
+    <div class="loading" id="post-loading"><em>Loading...</em></div>
+}
+else
+{
+    <div class="post-page" id="post-page">
+        <article class="post-card" id="post-card">
+            <header class="post-header">
+                <h1 class="post-title" id="post-title">@Post.Title</h1>
+                <div class="post-meta" id="post-meta">
+                    <span class="post-author">Author is @(string.IsNullOrWhiteSpace(Post.PUserName) ? "Anonymous" : Post.PUserName)</span>
+                    <span class="post-dot">·</span>
+                    <time class="post-time">@Post.PCreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</time>
+                </div>
+                <div class="post-votes" id="post-votes" aria-live="polite">
+                    <span class="votes-badge" title="Samlede stemmer">@Post.Votes</span>
+                </div>
+            </header>
+
+            <div class="post-content" id="post-content">
+                <p>@Post.Content</p>
+            </div>
+        </article>
+
+        <section class="comments-section" id="comments-section">
+            <div class="comments-header">
+                <h2 class="comments-title">Comments</h2>
+                @if (Post.Comments is null || Post.Comments.Count == 0)
+                {
+                    <span class="comments-count">Be the first to comment!</span>
+                }
+                else
+                {
+                    <span class="comments-count">This post has @Post.Comments.Count comments</span>
+                }
+            </div>
+A
+
+            <div class="comments-table-wrap">
+                <table class="comments-table" id="comments-table">
+                    <thead>
+                        <tr>
+                            <th class="col-user">Author</th>
+                            <th class="col-comment">Comment</th>
+                            <th class="col-created">Created</th>
+                            <th class="col-votes" colspan="3">Votes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var comment in Post.Comments)
+                        {
+                            <tr id=@($"comment-row-{comment.Id}")>
+                                <td class="cell-user">
+                                    @(string.IsNullOrWhiteSpace(comment.CUserName) ? "Anonymous" : comment.CUserName)
+                                </td>
+                                <td class="cell-comment">
+                                    @comment.Content
+                                </td>
+                                <td class="cell-created">
+                                    @comment.CCreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
+                                </td>
+                                <td class="cell-votes" aria-live="polite">
+                                    <span class="votes-pill" id=@($"comment-votes-{comment.Id}")>@comment.Votes</span>
+                                </td>
+                                <td class="cell-action">
+                                    <button class="btn btn-vote btn-up"
+                                            id=@($"btn-up-comment-{comment.Id}")
+                                            @onclick="() => Upvote(comment.Id)">
+                                        ▲ Upvote
+                                    </button>
+                                </td>
+                                <td class="cell-action">
+                                    <button class="btn btn-vote btn-down"
+                                            id=@($"btn-down-comment-{comment.Id}")
+                                            @onclick="() => Downvote(comment.Id)">
+                                        ▼ Downvote
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Passerer PostId ind i CreateComment -->
+            <div class="create-comment-wrap" id="create-comment-wrap">
+                <CreateComment PostId="@PostId" OnCommentAdded="ReloadPost" />
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public string Id { get; set; }
+    public int PostId => int.Parse(Id);
+    public Post Post { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Post = await apiService.GetPost(PostId);
+    }
+
+    private async Task Upvote(int commentId)
+    {
+        var c = Post?.Comments?.FirstOrDefault(x => x.Id == commentId);
+        if (c is null) return;
+
+        c.Votes += 1; // Optimistisk UI
+        StateHasChanged();
+
+        try { await apiService.UpvoteComment(PostId, commentId); }
+        catch
+        {
+            c.Votes -= 1; // Rul tilbage
+            StateHasChanged();
+        }
+    }
+
+    private async Task Downvote(int commentId)
+    {
+        var c = Post?.Comments?.FirstOrDefault(x => x.Id == commentId);
+        if (c is null) return;
+
+        c.Votes -= 1; // Optimistisk UI
+        StateHasChanged();
+
+        try { await apiService.DownvoteComment(PostId, commentId); }
+        catch
+        {
+            c.Votes += 1; // Rul tilbage
+            StateHasChanged();
+        }
+    }
+
+    private async Task ReloadPost()
+    {
+        Post = await apiService.GetPost(PostId);
+        StateHasChanged();
+    }
+}

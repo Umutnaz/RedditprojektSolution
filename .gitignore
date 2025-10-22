@@ -1,0 +1,12 @@
+﻿# JetBrains / Rider
+.idea/
+# Build output
+bin/
+obj/
+# User-specific
+*.user
+*.suo
+*.userprefs
+# OS
+Thumbs.db
+.DS_Store

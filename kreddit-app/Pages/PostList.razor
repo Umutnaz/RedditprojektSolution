@@ -1,0 +1,120 @@
+﻿@using kreddit_app.Data
+@using shared.Model
+@inject ApiService apiService
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@if (posts == null)
+{
+    <div class="loading" id="list-loading"><em>Loading...</em></div>
+}
+else
+{
+    <section class="list-wrap" id="post-list-wrap">
+        <header class="list-header">
+            <h2 class="list-title">Latest Posts</h2>
+            <span class="list-count">There is @posts.Length posts</span>
+        </header>
+
+        <div class="table-wrap">
+            <table class="post-table" id="post-table">
+                <thead>
+                    <tr>
+                        <th class="col-author">Author</th>
+                        <th class="col-title">Title</th>
+                        <th class="col-content">Content</th>
+                        <th class="col-created">Created</th>
+                        <th class="col-votes" colspan="3">Votes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var post in posts)
+                    {
+                        <tr id=@($"post-row-{post.Id}")>
+                            <td class="cell-author">
+                                @(string.IsNullOrWhiteSpace(post.PUserName) ? "Anonymous" : post.PUserName)
+                            </td>
+                            <td class="cell-title">
+                                <a class="post-link" id=@($"post-link-{post.Id}") href="/post/@post.Id">@post.Title</a>
+                            </td>
+                            <td class="cell-content">
+                                @post.Content
+                            </td>
+                            <td class="cell-created">
+                                @post.PCreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
+                            </td>
+                            <td class="cell-votes" aria-live="polite">
+                                <span class="votes-pill" id=@($"post-votes-{post.Id}")>@post.Votes</span>
+                            </td>
+                            <td class="cell-action">
+                                <button class="btn btn-vote btn-up"
+                                        id=@($"btn-up-post-{post.Id}")
+                                        @onclick="() => Upvote(post.Id)">
+                                    ▲ Upvote
+                                </button>
+                            </td>
+                            <td class="cell-action">
+                                <button class="btn btn-vote btn-down"
+                                        id=@($"btn-down-post-{post.Id}")
+                                        @onclick="() => Downvote(post.Id)">
+                                    ▼ Downvote
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="create-post-wrap">
+            <CreatePost OnPostAdded="ReloadPosts" />
+        </div>
+    </section>
+}
+
+@code {
+    private Post[]? posts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        posts = await apiService.GetPosts();
+    }
+
+    private async Task Upvote(int id)
+    {
+        var p = posts?.FirstOrDefault(x => x.Id == id);
+        if (p is null) return;
+
+        p.Votes += 1; // Optimistisk UI
+        StateHasChanged();
+
+        try { await apiService.UpvotePost(id); }
+        catch
+        {
+            p.Votes -= 1; // Rul tilbage
+            StateHasChanged();
+        }
+    }
+
+    private async Task Downvote(int id)
+    {
+        var p = posts?.FirstOrDefault(x => x.Id == id);
+        if (p is null) return;
+
+        p.Votes -= 1; // Optimistisk UI
+        StateHasChanged();
+
+        try { await apiService.DownvotePost(id); }
+        catch
+        {
+            p.Votes += 1; // Rul tilbage
+            StateHasChanged();
+        }
+    }
+
+    private async Task ReloadPosts()
+    {
+        posts = await apiService.GetPosts();
+        StateHasChanged();
+    }
+}

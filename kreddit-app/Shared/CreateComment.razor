@@ -1,0 +1,33 @@
+@using kreddit_app.Data;
+@inject ApiService apiService
+@using Microsoft.AspNetCore.Components
+
+
+<div>
+    <br/>
+    <h3>Write a comment</h3>
+    <input placeholder="Username (optional)" type="input" @bind="cUserName" />
+    <input placeholder="Content" type="input" id="content" @bind="content" />
+    <button id="createCommentButton" type="button" @onclick="CreateNewComment">Post comment</button>
+    <p>"Anonymous" will appear if you dont type anything</p>
+</div>
+
+@code {
+    [Parameter] public int PostId { get; set; }
+    [Parameter] public EventCallback OnCommentAdded { get; set; }  // <- tilføjet
+
+    private string? cUserName;
+    private string? content;
+
+    private async Task CreateNewComment()
+    {
+        if (string.IsNullOrWhiteSpace(content)) return;
+
+        await apiService.CreateComment(content!, PostId, cUserName);
+
+        content = "";
+        cUserName = "";
+
+        await OnCommentAdded.InvokeAsync();
+    }
+}
